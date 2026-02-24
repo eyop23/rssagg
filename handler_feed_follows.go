@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 	"fmt"
+
 	"encoding/json"
 	db "github.com/eyop23/rssagg/internal/database"
 
@@ -11,10 +12,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func(config *apiConfig) handlerCreateUser(w http.ResponseWriter,r *http.Request){
+func(config *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter,r *http.Request,user db.User){
 
 	type parameters struct {
-		Name string `json:"name"`
+		FeedID uuid.UUID `json:"feed_id"`
 	}
 	decoder:=json.NewDecoder(r.Body)
 	params:=parameters{};
@@ -23,20 +24,20 @@ func(config *apiConfig) handlerCreateUser(w http.ResponseWriter,r *http.Request)
 		respondWithJSON(w,400,fmt.Sprintf("error parsing json %v",err))
 		return
 	}
-    user,err:=config.DB.CreateUser(r.Context(),db.CreateUserParams{
+    feed_follows,err:=config.DB.CreateFeedFollow(r.Context(),db.CreateFeedFollowParams{
 		ID:uuid.New(),
-		Name:params.Name,
 		CreatedAt:time.Now().UTC(),
 		UpdatedAt:time.Now().UTC(),
+		UserID:user.ID,
+		FeedID:params.FeedID,
 	})
 	if err != nil{
-		respondWithError(w,400,fmt.Sprintf("failed to create user %v",err))
+		respondWithError(w,400,fmt.Sprintf("failed to create feed follow %v",err))
 	}
-	respondWithJSON(w,201,user)
+	respondWithJSON(w,201,feed_follows)
 }
 
-func (config *apiConfig) handlerGetUser(w http.ResponseWriter,r *http.Request,user db.User){
-	
-	respondWithJSON(w,200,user)
-}
+
+
+
 
