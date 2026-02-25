@@ -2,6 +2,7 @@ package main
  import (
 	"log"
 	"os"
+  "time"
 	"net/http"
   "database/sql"
   db "github.com/eyop23/rssagg/internal/database"
@@ -33,9 +34,12 @@ func main(){
   if err = conn.Ping(); err != nil {
     log.Fatal("database not reachable:", err)
   }
+  db:=db.New(conn)
   apiCfg:=apiConfig{
-    DB:db.New(conn),
+    DB:db,
   }
+
+  go startScraping(db,10,time.Minute)
 
   router := chi.NewRouter()
 
@@ -56,7 +60,8 @@ func main(){
   v1Router.Post("/feeds",apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
   v1Router.Get("/feeds",apiCfg.handlerGetFeeds)
   v1Router.Post("/feed_follows",apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
-
+  v1Router.Get("/feed_follows",apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollow))
+  v1Router.Delete("/feed_follows/{feed_follow_id}",apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 
   router.Mount("/v1",v1Router)
   
