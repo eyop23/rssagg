@@ -40,3 +40,15 @@ func (config *apiConfig) handlerGetUser(w http.ResponseWriter,r *http.Request,us
 	respondWithJSON(w,200,user)
 }
 
+func (config *apiConfig) handlerGetPostsForUser(w http.ResponseWriter,r *http.Request,user db.User){
+	 posts,err := config.DB.GetPostsForUser(r.Context(),db.GetPostsForUser{
+		UserID:user.ID,
+		Limit:10
+	 })
+
+	 if err != nil {
+		respondWithJSON(w,400,fmt.Sprintf("error finding posts for user %v",err))
+		return
+	}		
+	respondWithJSON(w,200,posts)
+}
